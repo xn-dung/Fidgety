@@ -124,3 +124,25 @@ filesystem paths and default architecture. `FIDGETY_DATA_ROOT` supports a
 mounted directory; `FIDGETY_DATA_ZIP` supports streaming from ZIP and takes
 precedence. The notebook uses a directory. Arrays still occupy system RAM.
 Archives, datasets, checkpoints and generated results are excluded from Git.
+
+
+## Multiple Kaggle GPUs and runtime
+
+The runner starts one independent training subprocess per visible GPU by
+default (`GPU_WORKERS = 0`). With two GPUs it dynamically assigns independent
+architecture/fold jobs to both, pinning each subprocess through
+`CUDA_VISIBLE_DEVICES`. Batch size four, early stopping and checkpoint
+selection stay unchanged. One coordinator writes the shared CSV; job markers
+are published atomically. On an error or interrupt it terminates active
+training subprocesses. Set `GPU_WORKERS = 1` if host RAM limits parallel runs.
+`CPU_THREADS_PER_WORKER = 2` limits CPU oversubscription. Dataset loading and
+system RAM are shared, so two GPUs do not guarantee twice the throughput.
+
+Use `MODE = "benchmark"` for four published architecture-1 jobs, one fold,
+two restarts each, and the original 1000-epoch cap / patience ten. Once all
+four network families have a completed timing sample, the runner prints an
+approximate full-schedule runtime and remaining ETA from observed seconds
+per restart. The full schedule has 1800 restarts per network family. These
+are estimates: architectures, stopping epochs, GPU speed and I/O contention
+vary. Smoke mode's five-epoch cap is explicitly excluded from extrapolating
+to the full paper schedule. Benchmark tables are partial, not paper results.
