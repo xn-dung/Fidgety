@@ -1,7 +1,7 @@
 from data_io import loadtxt, fold_indices, run_count
 import torch
 from torch import nn
-from torch_utils import initialize_model, fit, evaluate, save_model, EarlyStopping, ChannelsLastFlatten
+from torch_utils import initialize_model, fit, evaluate, save_model, record_result, EarlyStopping, ChannelsLastFlatten
 
 
 
@@ -139,6 +139,8 @@ for fi in fold_indices():
         res[ri,0] = val_loss
         res[ri,1] = val_score[1]
         res[ri,2] = test_score[1]
+
+        record_result(model, x_test, y_test, fi+1, ri+1, train_hist, val_score, test_score)
 
         if val_loss < min_val_score:
            min_val_score = val_loss

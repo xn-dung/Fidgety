@@ -36,30 +36,48 @@ in the original code. Checkpoints from best-model training restore the best
 validation-loss epoch before saving.
 
 
-## Kaggle: train directly from data.zip
+## Kaggle: run all four models and export one CSV
 
-Import `train_kaggle.ipynb` into Kaggle, attach your Dataset containing
-`data.zip`, enable GPU and Internet, then run the notebook cells in order.
-The default smoke run uses VID, fold 1, one run and five epochs. Change the
-configuration cell for a full experiment. Results and logs are saved under
-`/kaggle/working/outputs/<experiment>/fold_<n>`.
+Import `train_kaggle.ipynb` into Kaggle, attach the author's extracted data
+folder and enable GPU and Internet. This notebook contains code cells only.
+Its default data directory is `/kaggle/input/datasets/xndung/fidgety/data`.
+Run all cells to train VID, IMU, MAT and their early fusion, sequentially.
+The smoke configuration uses fold 1, one run and at most five epochs per
+model. For the original training schedule set `FOLDS = list(range(1, 10))`,
+`RUNS = 20`, `EPOCHS = 1000` in the first cell. This does not rerun tuning.
 
-No archive extraction is needed. `data_io.loadtxt` reads each requested text
-file from `FIDGETY_DATA_ZIP` as a stream; without that environment variable,
-it reads the original filesystem paths. Arrays still occupy host RAM.
+Each experiment gets a new timestamped directory under
+`/kaggle/working/outputs`. One `results.csv` contains a row per model/fold/run;
+it is updated after every completed run. Separate model/fold directories
+contain logs, the original result text files and best-model checkpoints.
+The last notebook cell displays all rows and mean metrics per model, with a
+link to the CSV. The experiment configuration records the source commit and
+seed. GPU operations are not guaranteed to be bitwise deterministic.
+
+CSV test accuracy, sensitivity, specificity, balanced accuracy and confusion
+counts use sigmoid probabilities, matching the author's evaluation scripts.
+Columns named `val_accuracy_logits` and `test_accuracy_logits` preserve the
+original training metric's threshold of 0.5 on raw logits. Summary means
+weight each fold/run equally. Checkpoint selection uses validation loss.
 
 Optional environment variables (defaults preserve the original scripts):
 
-- `FIDGETY_DATA_ZIP`: path to the author's ZIP archive.
-- `FIDGETY_FOLDS`: comma-separated fold numbers, default `1,2,3,4,5,6,7,8,9`.
-- `FIDGETY_RUNS`: number of best-model training runs, default `20`.
-- `FIDGETY_EPOCHS`: maximum epochs, default is the script's original value.
+- `FIDGETY_DATA_ROOT`: directory containing `data_*_9fold` and random indices.
+- `FIDGETY_DATA_ZIP`: read the same relative file paths directly from a ZIP
+  instead; ZIP takes precedence if both data variables are set.
+- `FIDGETY_FOLDS`: comma-separated fold numbers; default is all nine folds.
+- `FIDGETY_RUNS`: best-model training repetitions; default `20`.
+- `FIDGETY_EPOCHS`: maximum epochs; default is the script's original value.
+- `FIDGETY_RESULTS_CSV`: optional CSV destination; append one row per run.
+- `FIDGETY_MODEL`: model name written to CSV.
+- `FIDGETY_SEED`: optional seed for Python, NumPy and PyTorch.
 
-The notebook skips folds marked complete with the same configuration and
-source commit. Interrupted folds restart from their first run; checkpoints
-do not include optimizer state. Evaluation scripts still expect checkpoints
-in their original results directory layout; the training notebook does not
-run those evaluation scripts automatically.
+Without data environment variables, scripts use the original relative paths.
+The notebook unsets the ZIP variable to read your Kaggle folder directly.
+Arrays still occupy host RAM. Interrupted runs are not resumed; a new
+notebook experiment starts fresh. Save or download Kaggle outputs before
+ending the session. Evaluation scripts still expect checkpoints in their
+original results directory layout; this notebook computes test metrics
+directly during training and does not run those scripts.
 
-The repository excludes archives, datasets, checkpoints and generated results
-through `.gitignore`. Upload `data.zip` to Kaggle separately.
+Archives, datasets, checkpoints and generated results are excluded from Git.

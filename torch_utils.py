@@ -1,12 +1,21 @@
 """Shared PyTorch training routines; scripts retain the original experiment flow."""
 import copy
 import os
+import random
 from types import SimpleNamespace
 
 import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
+
+if 'FIDGETY_SEED' in os.environ:
+    seed = int(os.environ['FIDGETY_SEED'])
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -162,3 +171,38 @@ def load_model(filename):
                             for name, args, kwargs in checkpoint['layers']]).to(DEVICE)
     model.load_state_dict(checkpoint['state_dict'])
     return model.eval()
+
+
+def record_result(model, x_test, y_test, fold, run, history, val_score, test_score):
+    filename = os.environ.get('FIDGETY_RESULTS_CSV')
+    if not filename:
+        return
+    import csv
+    from pathlib import Path
+
+    logits = predict(model, x_test).reshape(-1)
+    labels = np.asarray(y_test).reshape(-1).astype(int)
+    predictions = torch.round(torch.sigmoid(torch.as_tensor(logits))).numpy().astype(int)
+    tn = int(np.sum((labels == 0) & (predictions == 0)))
+    fp = int(np.sum((labels == 0) & (predictions == 1)))
+    fn = int(np.sum((labels == 1) & (predictions == 0)))
+    tp = int(np.sum((labels == 1) & (predictions == 1)))
+    sensitivity = tp / (tp + fn) if tp + fn else float('nan')
+    specificity = tn / (tn + fp) if tn + fp else float('nan')
+    row = dict(model=os.environ.get('FIDGETY_MODEL', 'unknown'), fold=fold, run=run,
+               epochs_trained=len(history.history['loss']),
+               best_val_loss=float(min(history.history['val_loss'])),
+               val_accuracy_logits=float(val_score[1]), test_accuracy_logits=float(test_score[1]),
+               test_loss=float(test_score[0]), test_accuracy=(tp + tn) / len(labels),
+               sensitivity=sensitivity, specificity=specificity,
+               balanced_accuracy=(sensitivity + specificity) / 2,
+               tn=tn, fp=fp, fn=fn, tp=tp)
+    target = Path(filename)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    needs_header = not target.exists() or target.stat().st_size == 0
+    with target.open('a', newline='', encoding='utf-8') as stream:
+        writer = csv.DictWriter(stream, fieldnames=list(row))
+        if needs_header:
+            writer.writeheader()
+        writer.writerow(row)
+    print('Test metrics (sigmoid):', row, flush=True)

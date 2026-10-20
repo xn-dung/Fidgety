@@ -1,6 +1,6 @@
 """Read the author's text files from disk or directly from a ZIP archive."""
 import os
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 import zipfile
 
 import numpy as np
@@ -8,12 +8,15 @@ import numpy as np
 
 def loadtxt(filename, *args, **kwargs):
     archive_path = os.environ.get('FIDGETY_DATA_ZIP')
-    if not archive_path:
+    data_root = os.environ.get('FIDGETY_DATA_ROOT')
+    if not archive_path and not data_root:
         return np.loadtxt(filename, *args, **kwargs)
     parts = PurePosixPath(str(filename).replace('\\', '/')).parts
     if 'data' not in parts:
         raise ValueError('Expected a data/ path: ' + str(filename))
     relative = '/'.join(parts[parts.index('data') + 1:])
+    if data_root and not archive_path:
+        return np.loadtxt(Path(data_root) / relative, *args, **kwargs)
     with zipfile.ZipFile(archive_path) as archive:
         candidates = [name for name in archive.namelist()
                       if not name.endswith('/') and
