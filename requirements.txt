@@ -4,3 +4,4 @@ scikit-learn
 matplotlib
 optuna>=4.0
 pandas
+scipy

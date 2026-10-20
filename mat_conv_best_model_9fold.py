@@ -1,7 +1,7 @@
-from data_io import loadtxt, fold_indices, run_count
+from data_io import loadtxt, fold_indices, run_count, architecture_parameters
 import torch
 from torch import nn
-from torch_utils import initialize_model, fit, evaluate, save_model, record_result, EarlyStopping, ChannelsLastFlatten
+from torch_utils import initialize_model, fit, evaluate, save_model, record_result, save_selected_predictions, EarlyStopping, ChannelsLastFlatten
 
 
 
@@ -30,6 +30,10 @@ out_file_pref = 'res_mat_9fold'
 
 # model file prefix
 model_file_pref = 'model_mat_9fold'
+
+# Optional override used by the paper-reproduction notebook.
+for parameter, value in architecture_parameters().items():
+    globals()[parameter] = value
 
 ### END PARAMETERS
 
@@ -149,6 +153,7 @@ for fi in fold_indices():
            '_kn2_' + str(kn2) + '_kw2_' + str(kw2) +
            '_kn3_' + str(kn3) + '_kw3_' + str(kw3) +
            '_fc1_' + str(fc1) + '_fc2_' + str(fc2) + '.pt')
+           save_selected_predictions(model, x_test, y_test, fi+1, ri+1, val_loss, train_hist)
 
         del model, train_hist
 

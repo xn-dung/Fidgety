@@ -34,7 +34,7 @@ for path in Path('.').glob('*conv_best_model_9fold.py'):
     for node in tree.body:
         if isinstance(node, ast.Assign):
             exec(compile(ast.Module(body=[node], type_ignores=[]), str(path), 'exec'), scope)
-    fold = next(n for n in tree.body if isinstance(n, ast.For))
+    fold = next(n for n in tree.body if isinstance(n, ast.For) and isinstance(n.target, ast.Name) and n.target.id == 'fi')
     run = next(n for n in fold.body if isinstance(n, ast.For))
     start = next(i for i, n in enumerate(run.body) if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == 'model' for t in n.targets))
     end = next(i for i, n in enumerate(run.body) if isinstance(n, ast.Expr) and isinstance(n.value, ast.Call) and isinstance(n.value.func, ast.Name) and n.value.func.id == 'initialize_model')

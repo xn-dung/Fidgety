@@ -36,48 +36,91 @@ in the original code. Checkpoints from best-model training restore the best
 validation-loss epoch before saving.
 
 
-## Kaggle: run all four models and export one CSV
+## Kaggle: published-architecture retraining and paper comparison
 
-Import `train_kaggle.ipynb` into Kaggle, attach the author's extracted data
-folder and enable GPU and Internet. This notebook contains code cells only.
-Its default data directory is `/kaggle/input/datasets/xndung/fidgety/data`.
-Run all cells to train VID, IMU, MAT and their early fusion, sequentially.
-The smoke configuration uses fold 1, one run and at most five epochs per
-model. For the original training schedule set `FOLDS = list(range(1, 10))`,
-`RUNS = 20`, `EPOCHS = 1000` in the first cell. This does not rerun tuning.
+`train_kaggle.ipynb` contains only executable code cells. Add the author's
+data directory at `/kaggle/input/datasets/xndung/fidgety/data`, enable GPU
+and Internet, and run the cells in order. Default `MODE = "paper"` trains:
 
-Each experiment gets a new timestamped directory under
-`/kaggle/working/outputs`. One `results.csv` contains a row per model/fold/run;
-it is updated after every completed run. Separate model/fold directories
-contain logs, the original result text files and best-model checkpoints.
-The last notebook cell displays all rows and mean metrics per model, with a
-link to the CSV. The experiment configuration records the source commit and
-seed. GPU operations are not guaranteed to be bitwise deterministic.
+- MAT, IMU, VID and ALL 1-Net (early fusion).
+- All ten published architectures for each network family.
+- Nine subject-separated folds, twenty random restarts per architecture/fold.
+- Batch size four, validation split 1/8, patience ten, maximum 1000 epochs.
 
-CSV test accuracy, sensitivity, specificity, balanced accuracy and confusion
-counts use sigmoid probabilities, matching the author's evaluation scripts.
-Columns named `val_accuracy_logits` and `test_accuracy_logits` preserve the
-original training metric's threshold of 0.5 on raw logits. Summary means
-weight each fold/run equally. Checkpoint selection uses validation loss.
+This is **360 training jobs / 7200 random restarts**. Use `MODE = "smoke"`
+to test one architecture, one fold, two restarts and five epochs before
+launching the full schedule. Smoke/partial tables are labeled accordingly.
 
-Optional environment variables (defaults preserve the original scripts):
+`paper_architectures.json` transcribes all forty configurations directly
+from Supplementary Tables 2 and 3. The notebook retrains those fixed published
+architectures; it does **not** rerun Bayesian optimization or grid search.
+The separate legacy tuning scripts use Optuna TPE and are not the original
+KerasTuner Gaussian-process search.
 
-- `FIDGETY_DATA_ROOT`: directory containing `data_*_9fold` and random indices.
-- `FIDGETY_DATA_ZIP`: read the same relative file paths directly from a ZIP
-  instead; ZIP takes precedence if both data variables are set.
-- `FIDGETY_FOLDS`: comma-separated fold numbers; default is all nine folds.
-- `FIDGETY_RUNS`: best-model training repetitions; default `20`.
-- `FIDGETY_EPOCHS`: maximum epochs; default is the script's original value.
-- `FIDGETY_RESULTS_CSV`: optional CSV destination; append one row per run.
-- `FIDGETY_MODEL`: model name written to CSV.
-- `FIDGETY_SEED`: optional seed for Python, NumPy and PyTorch.
+The original four training scripts still perform preprocessing and model
+construction. Optional parameter overrides select the published architecture.
+For each architecture/fold, the lowest-validation-loss random restart is
+selected, with its best-validation epoch restored. Only this checkpoint's
+probabilities enter reported metrics. Restarts are never averaged.
 
-Without data environment variables, scripts use the original relative paths.
-The notebook unsets the ZIP variable to read your Kaggle folder directly.
-Arrays still occupy host RAM. Interrupted runs are not resumed; a new
-notebook experiment starts fresh. Save or download Kaggle outputs before
-ending the session. Evaluation scripts still expect checkpoints in their
-original results directory layout; this notebook computes test metrics
-directly during training and does not run those scripts.
+Before training, the runner checks sample identity/order and labels across
+modalities, random-index permutations, disjoint train/test infant IDs and
+non-overlapping test-fold infant IDs. Full paper mode requires 32 train and
+four test infants per fold. It uses the supplied folds without a new random
+split. Original normalization and Fortran reshape behavior are retained.
 
+Late fusion averages probabilities from selected independent MAT/IMU/VID
+networks for MAT+IMU, MAT+VID, IMU+VID and ALL 3-Nets. It does not average
+logits or concatenate features; the latter is the separate ALL 1-Net model.
+
+One `results.csv` includes these `row_type` values:
+
+- `fold`: metrics for every architecture/fold and late-fusion condition.
+- `architecture_summary`: Supplementary Tables 4/5-style summaries for each
+  published architecture, using one selected restart per fold.
+- `table2`: main comparison using **published architecture #1**, the model
+  reported as best in each original architecture table, fixed before retraining.
+  No new architecture is selected from the new test scores. These are therefore
+  comparisons of published models, not a new best-of-ten test ranking.
+- `table3`: exact paired two-sided Wilcoxon signed-rank comparisons of those
+  main models across matching folds, with no multiple-comparison correction.
+
+Sensitivity, specificity and balanced accuracy are reported with the author's
+normal-approximation mean CI: `mean +/- 1.96 * sample_std / sqrt(n)`.
+This matches `class_results/plot_results.m`; a Student t interval is not used.
+Wilcoxon probabilities are calculated by exact sign enumeration, with zero
+differences removed and tied absolute differences assigned average ranks.
+Floating differences are rounded to 12 decimals before identifying ties.
+The CSV retains all fold observations, so statistical choices can be audited.
+
+`paper_reference.json` contains the authors' original aggregate results from
+the small `class_results.zip` package, for comparison only. New metrics are
+computed from your newly trained predictions. Table rows include reference
+values and differences in percentage points. The notebook also plots
+`paper_comparison.png`. New values are not replaced by reference numbers.
+
+Results, logs, selected predictions and checkpoints are written under
+`OUTPUT_DIR`. Completed architecture/fold jobs are skipped when resuming the
+same configuration, source and dataset metadata. Interrupted jobs restart all
+their random restarts; epoch/optimizer resume is not provided. You must save
+or download Kaggle outputs to preserve them across sessions; copying the
+whole experiment directory back to the same OUTPUT_DIR allows job resume.
+A changed source commit/configuration requires a new experiment directory.
+
+The scripts remain a PyTorch port, not a claim of bitwise reproduction of
+TensorFlow 2.10. Batch-normalization running variance, single-sample dense
+BatchNorm handling, RNGs and GPU operations may produce different results.
+The notebook checks the published architecture and evaluation protocol; only
+a full actual-data run can assess numerical agreement with the paper.
+
+Sources:
+
+- Article: https://doi.org/10.1038/s43856-024-00701-w
+- Published architectures: https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs43856-024-00701-w/MediaObjects/43856_2024_701_MOESM2_ESM.pdf
+- Reference fold results / MATLAB statistics: https://zenodo.org/records/14046527/files/class_results.zip?download=1
+
+Without environment overrides, the scripts retain the original relative
+filesystem paths and default architecture. `FIDGETY_DATA_ROOT` supports a
+mounted directory; `FIDGETY_DATA_ZIP` supports streaming from ZIP and takes
+precedence. The notebook uses a directory. Arrays still occupy system RAM.
 Archives, datasets, checkpoints and generated results are excluded from Git.

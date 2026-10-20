@@ -41,3 +41,17 @@ def run_count(default=20):
     if count < 1:
         raise ValueError('FIDGETY_RUNS must be positive.')
     return count
+
+
+def architecture_parameters():
+    import json
+    value = os.environ.get('FIDGETY_ARCHITECTURE')
+    if not value:
+        return {}
+    parameters = json.loads(value)
+    required = {'kn1', 'kw1', 'kn2', 'kw2', 'kn3', 'kw3', 'fc1', 'fc2'}
+    if set(parameters) != required or any(type(v) is not int for v in parameters.values()):
+        raise ValueError('Invalid architecture parameters.')
+    if any(parameters[k] <= 0 for k in required - {'fc2'}) or parameters['fc2'] != 0:
+        raise ValueError('Expected three Conv layers and one FC layer.')
+    return parameters

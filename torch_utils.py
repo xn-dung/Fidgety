@@ -206,3 +206,21 @@ def record_result(model, x_test, y_test, fold, run, history, val_score, test_sco
             writer.writeheader()
         writer.writerow(row)
     print('Test metrics (sigmoid):', row, flush=True)
+
+
+def save_selected_predictions(model, x_test, y_test, fold, run, val_loss, history):
+    filename = os.environ.get('FIDGETY_SELECTED_PREDICTIONS')
+    if not filename:
+        return
+    from pathlib import Path
+    target = Path(filename)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    logits = predict(model, x_test).reshape(-1)
+    probabilities = torch.sigmoid(torch.as_tensor(logits, dtype=torch.float64)).numpy()
+    temporary = target.with_suffix('.tmp')
+    with temporary.open('wb') as stream:
+        np.savez_compressed(stream, labels=np.asarray(y_test).reshape(-1).astype(int),
+                            logits=logits, probabilities=probabilities, fold=fold,
+                            selected_run=run, best_val_loss=val_loss,
+                            epochs_trained=len(history.history['loss']))
+    temporary.replace(target)

@@ -1,0 +1,142 @@
+{
+  "source": "https://zenodo.org/records/14046527/files/class_results.zip?download=1",
+  "ci_method": "mean +/- 1.96 * sample_std / sqrt(9)",
+  "conditions": {
+    "MAT": {
+      "sensitivity": {
+        "mean_pct": 86.16519766666667,
+        "ci_low_pct": 82.77694327901624,
+        "ci_high_pct": 89.5534520543171
+      },
+      "specificity": {
+        "mean_pct": 77.947694,
+        "ci_low_pct": 69.67662888476245,
+        "ci_high_pct": 86.21875911523755
+      },
+      "balanced_accuracy": {
+        "mean_pct": 82.05644588888889,
+        "ci_low_pct": 77.1105623463111,
+        "ci_high_pct": 87.00232943146668
+      }
+    },
+    "IMU": {
+      "sensitivity": {
+        "mean_pct": 92.91484422222223,
+        "ci_low_pct": 90.2839718050541,
+        "ci_high_pct": 95.54571663939036
+      },
+      "specificity": {
+        "mean_pct": 87.518175,
+        "ci_low_pct": 83.46850857558326,
+        "ci_high_pct": 91.56784142441674
+      },
+      "balanced_accuracy": {
+        "mean_pct": 90.21650955555555,
+        "ci_low_pct": 87.61248446296543,
+        "ci_high_pct": 92.82053464814567
+      }
+    },
+    "VID": {
+      "sensitivity": {
+        "mean_pct": 91.67099833333333,
+        "ci_low_pct": 89.79677055810406,
+        "ci_high_pct": 93.5452261085626
+      },
+      "specificity": {
+        "mean_pct": 89.6502951111111,
+        "ci_low_pct": 85.88671748907728,
+        "ci_high_pct": 93.41387273314493
+      },
+      "balanced_accuracy": {
+        "mean_pct": 90.66064666666666,
+        "ci_low_pct": 88.91076847811534,
+        "ci_high_pct": 92.41052485521799
+      }
+    },
+    "MAT+IMU": {
+      "sensitivity": {
+        "mean_pct": 94.11971288888887,
+        "ci_low_pct": 92.56037535657967,
+        "ci_high_pct": 95.67905042119807
+      },
+      "specificity": {
+        "mean_pct": 87.36059833333333,
+        "ci_low_pct": 82.66908891182115,
+        "ci_high_pct": 92.05210775484551
+      },
+      "balanced_accuracy": {
+        "mean_pct": 90.74015566666667,
+        "ci_low_pct": 87.94955723109994,
+        "ci_high_pct": 93.53075410223339
+      }
+    },
+    "MAT+VID": {
+      "sensitivity": {
+        "mean_pct": 92.57781766666668,
+        "ci_low_pct": 89.53224508323218,
+        "ci_high_pct": 95.62339025010117
+      },
+      "specificity": {
+        "mean_pct": 90.26935277777778,
+        "ci_low_pct": 86.49800244202423,
+        "ci_high_pct": 94.04070311353134
+      },
+      "balanced_accuracy": {
+        "mean_pct": 91.42358522222223,
+        "ci_low_pct": 88.93302686617575,
+        "ci_high_pct": 93.9141435782687
+      }
+    },
+    "IMU+VID": {
+      "sensitivity": {
+        "mean_pct": 94.432269,
+        "ci_low_pct": 92.52608138982097,
+        "ci_high_pct": 96.33845661017904
+      },
+      "specificity": {
+        "mean_pct": 92.28850155555556,
+        "ci_low_pct": 89.5885759738812,
+        "ci_high_pct": 94.9884271372299
+      },
+      "balanced_accuracy": {
+        "mean_pct": 93.36038522222222,
+        "ci_low_pct": 91.75258232625755,
+        "ci_high_pct": 94.96818811818689
+      }
+    },
+    "ALL 3-Nets": {
+      "sensitivity": {
+        "mean_pct": 96.15905466666666,
+        "ci_low_pct": 95.02942990556986,
+        "ci_high_pct": 97.28867942776347
+      },
+      "specificity": {
+        "mean_pct": 92.84686455555556,
+        "ci_low_pct": 90.23026882035747,
+        "ci_high_pct": 95.46346029075364
+      },
+      "balanced_accuracy": {
+        "mean_pct": 94.50295988888888,
+        "ci_low_pct": 93.05236502237886,
+        "ci_high_pct": 95.9535547553989
+      }
+    },
+    "ALL 1-Net": {
+      "sensitivity": {
+        "mean_pct": 92.87045244444444,
+        "ci_low_pct": 88.45190761919856,
+        "ci_high_pct": 97.28899726969031
+      },
+      "specificity": {
+        "mean_pct": 93.60043533333334,
+        "ci_low_pct": 91.0124823579171,
+        "ci_high_pct": 96.18838830874958
+      },
+      "balanced_accuracy": {
+        "mean_pct": 93.235444,
+        "ci_low_pct": 91.15208542486667,
+        "ci_high_pct": 95.31880257513333
+      }
+    }
+  }
+}
