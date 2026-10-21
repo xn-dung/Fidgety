@@ -152,8 +152,13 @@ def print_eta(output, config, workers):
         print('Smoke epoch cap: timings cannot reliably estimate the full paper schedule. Use MODE=benchmark for an early-stopping timing sample.', flush=True)
         return
     remaining_hours = sum(average[m] * remaining[m] for m in SCRIPTS) / workers / 3600
-    full_hours = sum(average.values()) * 1800 / workers / 3600
-    print(f'Measured ETA: remaining ~{remaining_hours:.1f} hours; full 7200-restart schedule ~{full_hours:.1f} hours on {workers} GPU worker(s).', flush=True)
+    requested_runs = 4 * len(config['architectures']) * len(config['folds']) * config['runs']
+    if config.get('mode', 'paper') == 'baseline':
+        total_hours = sum(average.values()) * len(config['folds']) * config['runs'] / workers / 3600
+        print(f'Measured BASELINE ETA: remaining ~{remaining_hours:.1f} hours; total {requested_runs} runs ~{total_hours:.1f} hours on {workers} GPU worker(s).', flush=True)
+    else:
+        full_hours = sum(average.values()) * 1800 / workers / 3600
+        print(f'Measured ETA: remaining ~{remaining_hours:.1f} hours; full 7200-restart schedule ~{full_hours:.1f} hours on {workers} GPU worker(s).', flush=True)
     print('Estimate uses observed time per restart by network family; architecture and stopping-epoch differences can change it.', flush=True)
 
 
@@ -163,8 +168,8 @@ def run_experiment(config_path):
     source = Path(__file__).resolve().parent
     output = config_path.parent
     catalog = json.loads((source / 'paper_architectures.json').read_text())['models']
-    if config['mode'] not in ['paper', 'smoke', 'benchmark']:
-        raise ValueError('Choose paper, smoke or benchmark.')
+    if config['mode'] not in ['paper', 'baseline', 'smoke', 'benchmark']:
+        raise ValueError('Choose baseline, paper, smoke or benchmark.')
     if not config['folds'] or len(set(config['folds'])) != len(config['folds']) or any(f not in range(1, 10) for f in config['folds']):
         raise ValueError('Invalid folds.')
     if not config['architectures'] or len(set(config['architectures'])) != len(config['architectures']) or any(a not in range(1, 11) for a in config['architectures']) or 1 not in config['architectures']:
@@ -173,9 +178,11 @@ def run_experiment(config_path):
         raise ValueError('Runs and epochs must be positive.')
     if config['mode'] == 'paper' and (config['folds'] != list(range(1, 10)) or config['architectures'] != list(range(1, 11)) or config['runs'] != 20 or config['epochs'] != 1000):
         raise ValueError('Paper mode requires all 9 folds, 10 architectures, 20 restarts and max 1000 epochs.')
+    if config['mode'] == 'baseline' and (config['folds'] != list(range(1, 10)) or config['architectures'] != [1] or config['epochs'] != 1000):
+        raise ValueError('Baseline requires all 9 folds, published architecture 1 and max 1000 epochs.')
     os.environ.pop('FIDGETY_DATA_ZIP', None)
     os.environ['FIDGETY_DATA_ROOT'] = config['data_root']
-    details = validate_data(config['folds'], require_paper_subject_counts=config['mode'] == 'paper')
+    details = validate_data(config['folds'], require_paper_subject_counts=config['mode'] in ['paper', 'baseline'])
     print(details.to_string(index=False), flush=True)
     # Prevent silently resuming with changed data or implementation.
     signature = hashlib.sha256()

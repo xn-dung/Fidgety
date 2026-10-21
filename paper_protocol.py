@@ -187,6 +187,10 @@ def collect_results(output_dir, config):
     frame['expected_training_jobs'] = expected_jobs
     frame['protocol'] = config['mode']
     frame['all_requested_jobs_complete'] = completed_jobs == expected_jobs
+    frame['reduced_baseline_complete'] = (config['mode'] == 'baseline' and config['folds'] == list(range(1, 10))
+                                         and config['architectures'] == [1] and config['epochs'] == 1000
+                                         and completed_jobs == expected_jobs)
+    frame['training_restarts_per_fold'] = config['runs']
     frame['full_paper_schedule_complete'] = (config['mode'] == 'paper' and config['folds'] == list(range(1, 10))
                                              and config['architectures'] == list(range(1, 11))
                                              and config['runs'] == 20 and config['epochs'] == 1000

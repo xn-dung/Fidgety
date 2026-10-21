@@ -3,9 +3,10 @@
 PyTorch port of the supplied experiment scripts for *Deep learning empowered
 sensor fusion boosts infant movement classification*.
 
-- [Kaggle notebook](train_kaggle.ipynb): retrain the 40 published architectures,
-  select validation-loss winners, calculate early/late fusion and export one CSV.
-- Default paper mode: 9 folds x 10 architectures x 20 restarts x 4 network families.
+- [Kaggle notebook](train_kaggle.ipynb): run a fast published-model baseline or
+  the full 40-architecture protocol, calculate early/late fusion and export one CSV.
+- Default fast baseline: 9 folds x published architecture #1 x 1 run x 4 network families = 36 runs.
+- Optional paper mode: 9 folds x 10 architectures x 20 restarts x 4 network families.
 - Use smoke mode for a short pipeline check.
 - [Protocol, differences and setup](README_PYTORCH.md).
 

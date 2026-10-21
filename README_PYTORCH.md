@@ -40,7 +40,7 @@ validation-loss epoch before saving.
 
 `train_kaggle.ipynb` contains only executable code cells. Add the author's
 data directory at `/kaggle/input/datasets/xndung/fidgety/data`, enable GPU
-and Internet, and run the cells in order. Default `MODE = "paper"` trains:
+and Internet, and run the cells in order. Set `MODE = "paper"` to train:
 
 - MAT, IMU, VID and ALL 1-Net (early fusion).
 - All ten published architectures for each network family.
@@ -146,3 +146,32 @@ per restart. The full schedule has 1800 restarts per network family. These
 are estimates: architectures, stopping epochs, GPU speed and I/O contention
 vary. Smoke mode's five-epoch cap is explicitly excluded from extrapolating
 to the full paper schedule. Benchmark tables are partial, not paper results.
+
+
+## Fast baseline (notebook default)
+
+The notebook now defaults to `MODE = "baseline"`, `BASELINE_RUNS = 1`:
+36 training runs, comprising the published architecture #1 for each of MAT,
+IMU, VID and early fusion across all nine subject-separated folds. Late
+fusion reuses selected probabilities without training additional networks.
+This removes the other nine architectures and the twenty-restart search,
+while retaining preprocessing, batch size four, the 1000-epoch maximum and
+patience-ten early stopping. Two GPUs remain supported automatically.
+
+The output directory is separate from paper-mode outputs. Reference values
+remain comparisons only; the notebook cannot guarantee matching them.
+The CSV flags `reduced_baseline_complete` separately from
+`full_paper_schedule_complete`. Compact Table 2 displays mean [CI low CI high];
+Table 3 displays upper-triangular p-values with significance stars.
+
+`BASELINE_RUNS = 3` runs 108 trainings and selects the minimum-validation-loss
+restart for each modality/fold, as in the paper's best-restart approach; it
+is **not** a three-seed mean or independent-seed uncertainty study. The
+fastest default uses one run, so no restart selection is needed. A future
+model comparison should use the same restart and reporting rules on both
+models. No test score is used to select a restart.
+
+Run duration depends on actual early stopping and architecture speed. The
+runner reports a baseline-specific ETA from completed jobs; no fixed
+one-hour completion time is promised. Do not overwrite or delete old paper
+outputs when switching to this shorter experiment.
