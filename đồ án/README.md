@@ -14,6 +14,7 @@ Mỗi fold giữ nguyên test set theo trẻ của tác giả. RVQ-VAE, TF-IDF v
 4. Upload và mở `train_kaggle_video_rvq.ipynb`.
 5. Giữ `RUN_MODE = "smoke"` để kiểm tra một fold.
 6. Sau khi smoke test thành công, đổi thành `RUN_MODE = "full"` và chạy lại toàn bộ notebook.
+7. Full mode dùng bộ lập lịch động với tối đa hai GPU; GPU hoàn thành trước sẽ nhận fold tiếp theo.
 
 Kết quả nằm trong `/kaggle/working/video_rvq_full` và file nén `/kaggle/working/video_rvq_full.zip`.
 
@@ -27,6 +28,12 @@ Với dữ liệu Kaggle:
 
 ```bash
 python run.py --data-path /kaggle/input/datasets/xndung/fidgety/data --output-dir /kaggle/working/video_rvq_full
+```
+
+Chạy song song trên hai GPU:
+
+```bash
+python run_multi_gpu.py --data-path /kaggle/input/datasets/xndung/fidgety/data --output-dir /kaggle/working/video_rvq_full --gpu-workers 2
 ```
 
 ## Kết quả
